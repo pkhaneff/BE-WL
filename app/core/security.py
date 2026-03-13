@@ -6,8 +6,10 @@ from passlib.context import CryptContext
 from app.core.config import settings
 from app.core.exceptions import InvalidTokenError
 
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+_pwd_context = CryptContext(
+    schemes=["bcrypt_sha256"],
+    deprecated="auto",
+)
 
 def hash_password(plain_password: str) -> str:
     return _pwd_context.hash(plain_password)
