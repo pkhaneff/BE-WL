@@ -4,7 +4,7 @@ Backend cho ứng dụng **Wishlist** - môi trường cho các cặp đôi chia
 
 ## Tech Stack
 
-- **Python 3.12** · **FastAPI** · **PostgreSQL** · **SQLAlchemy 2.x** · **Alembic** · **Redis**
+- **Python 3.10** · **FastAPI** · **PostgreSQL** · **SQLAlchemy 2.x** · **Alembic** · **Redis**
 
 ## Cấu trúc dự án
 
@@ -26,8 +26,9 @@ cp .env.example .env
 # 2. Khởi động DB và Redis
 docker-compose up -d db redis
 
-# 3. Cài dependencies
-pip install -e .
+# 3. Tạo môi trường conda và kích hoạt
+conda env create -f environment.yml
+conda activate wishlist-be
 
 # 4. Chạy migration
 alembic revision --autogenerate -m "initial_schema"
