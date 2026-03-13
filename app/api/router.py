@@ -1,0 +1,15 @@
+from fastapi import APIRouter
+
+from app.modules.auth.router import router as auth_router
+from app.modules.users.router import router as users_router
+from app.modules.rooms.router import router as rooms_router
+from app.modules.wishes.router import router as wishes_router
+from app.modules.admin.router import router as admin_router
+
+api_router = APIRouter(prefix="/api/v1")
+
+api_router.include_router(auth_router)
+api_router.include_router(users_router)
+api_router.include_router(rooms_router)
+api_router.include_router(wishes_router)
+api_router.include_router(admin_router)
