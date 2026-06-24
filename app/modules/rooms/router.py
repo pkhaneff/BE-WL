@@ -5,8 +5,11 @@ from fastapi import APIRouter, status
 from app.api.deps import CurrentUser, DBSession
 from app.modules.rooms.schemas import (
     RoomCreate,
+    RoomJoinRequest,
     RoomResponse,
     RoomMemberResponse,
+    RoomSettingsUpdate,
+    RoomSettingsResponse,
 )
 from app.modules.rooms.service import RoomService
 from app.modules.rooms.repository import RoomRepository
@@ -29,6 +32,7 @@ def _build_room_response(room, db) -> RoomResponse:
                     user_id=m.user_id,
                     username=user.username,
                     full_name=user.full_name,
+                    avatar_url=user.avatar_url,
                     joined_at=m.joined_at,
                 )
             )
@@ -36,6 +40,7 @@ def _build_room_response(room, db) -> RoomResponse:
     return RoomResponse(
         id=room.id,
         name=room.name,
+        join_code=room.join_code,
         created_by=room.created_by,
         is_active=room.is_active,
         created_at=room.created_at,
@@ -67,14 +72,63 @@ def get_room(room_id: uuid.UUID, current_user: CurrentUser, db: DBSession) -> Ro
     return _build_room_response(room, db)
 
 
-@router.post("/{room_id}/join", response_model=RoomResponse)
-def join_room(room_id: uuid.UUID, current_user: CurrentUser, db: DBSession) -> RoomResponse:
+@router.post("/join", response_model=RoomResponse)
+def join_room(payload: RoomJoinRequest, current_user: CurrentUser, db: DBSession) -> RoomResponse:
     service = RoomService(db)
-    room = service.join_room(room_id, current_user.id)
+    room = service.join_room(payload, current_user.id)
     return _build_room_response(room, db)
 
 
 @router.post("/{room_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
 def leave_room(room_id: uuid.UUID, current_user: CurrentUser, db: DBSession) -> None:
+    service = RoomService(db)
+    service.leave_room(room_id, current_user.id)
+
+
+@router.get("/{room_id}/settings", response_model=RoomSettingsResponse)
+def get_room_settings(
+    room_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: DBSession,
+) -> RoomSettingsResponse:
+    service = RoomService(db)
+    room, total_wishes, total_completed_wishes = service.get_room_settings(room_id, current_user.id)
+    return RoomSettingsResponse(
+        room_id=room.id,
+        name=room.name,
+        join_code=room.join_code,
+        is_active=room.is_active,
+        total_wishes=total_wishes,
+        total_completed_wishes=total_completed_wishes,
+        created_at=room.created_at,
+        updated_at=room.updated_at,
+    )
+
+
+@router.patch("/{room_id}/settings", response_model=RoomSettingsResponse)
+def update_room_settings(
+    room_id: uuid.UUID,
+    payload: RoomSettingsUpdate,
+    current_user: CurrentUser,
+    db: DBSession,
+) -> RoomSettingsResponse:
+    service = RoomService(db)
+    room, total_wishes, total_completed_wishes = service.update_room_settings(
+        room_id, current_user.id, payload
+    )
+    return RoomSettingsResponse(
+        room_id=room.id,
+        name=room.name,
+        join_code=room.join_code,
+        is_active=room.is_active,
+        total_wishes=total_wishes,
+        total_completed_wishes=total_completed_wishes,
+        created_at=room.created_at,
+        updated_at=room.updated_at,
+    )
+
+
+@router.post("/{room_id}/settings/leave", status_code=status.HTTP_204_NO_CONTENT)
+def leave_room_from_settings(room_id: uuid.UUID, current_user: CurrentUser, db: DBSession) -> None:
     service = RoomService(db)
     service.leave_room(room_id, current_user.id)

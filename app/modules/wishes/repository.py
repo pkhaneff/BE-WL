@@ -19,7 +19,7 @@ class WishRepository:
 
     def get_by_id(self, wish_id: uuid.UUID) -> Wish | None:
         stmt = select(Wish).where(
-            and_(Wish.id == wish_id, Wish.deleted_at.is_(None))
+            and_(Wish.id == wish_id, Wish.status != WishStatus.DELETED, Wish.deleted_at.is_(None))
         )
         return self._db.execute(stmt).scalar_one_or_none()
 
@@ -35,9 +35,47 @@ class WishRepository:
 
         base_filter = and_(
             Wish.room_id == room_id,
+            Wish.status != WishStatus.DELETED,
             Wish.deleted_at.is_(None),
         )
         conditions = [base_filter]
+        if wish_type:
+            conditions.append(Wish.wish_type == wish_type)
+        if search:
+            conditions.append(Wish.title.ilike(f"%{search}%"))
+
+        combined = and_(*conditions)
+        count_stmt = select(func.count()).select_from(Wish).where(combined)
+        total = self._db.execute(count_stmt).scalar_one()
+
+        stmt = (
+            select(Wish)
+            .where(combined)
+            .offset(offset)
+            .limit(limit)
+            .order_by(Wish.created_at.desc())
+        )
+        items = list(self._db.execute(stmt).scalars().all())
+        return items, total
+
+    def get_by_room_with_statuses(
+        self,
+        room_id: uuid.UUID,
+        statuses: list[WishStatus],
+        wish_type: WishType | None = None,
+        search: str | None = None,
+        offset: int = 0,
+        limit: int = 20,
+    ) -> tuple[list[Wish], int]:
+        from sqlalchemy import func, and_
+
+        conditions = [Wish.room_id == room_id]
+        if statuses:
+            conditions.append(Wish.status.in_(statuses))
+
+        if WishStatus.DELETED not in statuses:
+            conditions.append(Wish.deleted_at.is_(None))
+
         if wish_type:
             conditions.append(Wish.wish_type == wish_type)
         if search:
@@ -63,6 +101,7 @@ class WishRepository:
 
     def soft_delete(self, wish: Wish) -> None:
         wish.deleted_at = datetime.now(timezone.utc)
+        wish.status = WishStatus.DELETED
         self._db.flush()
 
 

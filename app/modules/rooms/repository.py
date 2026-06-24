@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, and_
 
 from app.db.models.room import Room, RoomMember
+from app.db.models.wish import Wish
+from app.shared.enums import WishStatus
 
 
 class RoomRepository:
@@ -18,6 +20,10 @@ class RoomRepository:
 
     def get_by_id(self, room_id: uuid.UUID) -> Room | None:
         stmt = select(Room).where(Room.id == room_id)
+        return self._db.execute(stmt).scalar_one_or_none()
+
+    def get_by_join_code(self, join_code: str) -> Room | None:
+        stmt = select(Room).where(Room.join_code == join_code)
         return self._db.execute(stmt).scalar_one_or_none()
 
     def get_all(self, offset: int = 0, limit: int = 20) -> tuple[list[Room], int]:
@@ -79,3 +85,22 @@ class RoomRepository:
             .order_by(RoomMember.joined_at.desc())
         )
         return list(self._db.execute(stmt).scalars().all())
+
+    def get_wish_stats(self, room_id: uuid.UUID) -> tuple[int, int]:
+        from sqlalchemy import func, case
+
+        stmt = select(
+            func.count(Wish.id),
+            func.coalesce(
+                func.sum(case((Wish.status == WishStatus.CONFIRMED, 1), else_=0)),
+                0,
+            ),
+        ).where(
+            and_(
+                Wish.room_id == room_id,
+                Wish.status != WishStatus.DELETED,
+                Wish.deleted_at.is_(None),
+            )
+        )
+        total_wishes, total_completed_wishes = self._db.execute(stmt).one()
+        return int(total_wishes), int(total_completed_wishes)

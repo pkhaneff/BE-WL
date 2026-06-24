@@ -22,6 +22,7 @@ class WishResponse(BaseModel):
     id: uuid.UUID
     room_id: uuid.UUID
     created_by: uuid.UUID
+    creator_name: str | None = None
     title: str
     description: str | None
     wish_type: WishType
@@ -43,6 +44,7 @@ class WishHistoryResponse(BaseModel):
     title: str
     description: str | None
     wish_type: WishType
+    action: WishStatus
     confirmed_at: datetime
 
     model_config = {"from_attributes": True}

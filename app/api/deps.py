@@ -1,4 +1,5 @@
 import uuid
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -7,6 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.exceptions import InvalidTokenError, PermissionDeniedError
 from app.core.security import decode_token
 from app.db.session import get_db
+from app.infrastructure.storage.s3_uploader import S3Uploader
 from app.modules.users.repository import UserRepository
 from app.shared.enums import UserRole
 from app.db.models.user import User
@@ -15,6 +17,14 @@ from sqlalchemy.orm import Session
 http_bearer = HTTPBearer(auto_error=False)
 
 DBSession = Annotated[Session, Depends(get_db)]
+
+
+@lru_cache
+def get_s3_uploader() -> S3Uploader:
+    return S3Uploader.from_settings()
+
+
+S3UploaderDep = Annotated[S3Uploader, Depends(get_s3_uploader)]
 
 
 def _get_current_user_from_token(

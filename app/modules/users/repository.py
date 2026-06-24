@@ -21,6 +21,12 @@ class UserRepository:
         stmt = select(User).where(User.username == username)
         return self._db.execute(stmt).scalar_one_or_none()
 
+    def get_by_ids(self, user_ids: list[uuid.UUID]) -> list[User]:
+        if not user_ids:
+            return []
+        stmt = select(User).where(User.id.in_(user_ids))
+        return list(self._db.execute(stmt).scalars().all())
+
     def create(self, user: User) -> User:
         self._db.add(user)
         self._db.flush()

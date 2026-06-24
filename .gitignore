@@ -39,3 +39,4 @@ alembic/versions/*.py
 
 # Docker
 .docker/
+rule.md

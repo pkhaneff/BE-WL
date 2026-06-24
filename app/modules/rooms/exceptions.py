@@ -31,3 +31,19 @@ class RoomNotActiveError(DomainError):
             code="ROOM_NOT_ACTIVE",
             message="Phòng không còn hoạt động.",
         )
+
+
+class RoomPasswordInvalidError(DomainError):
+    def __init__(self) -> None:
+        super().__init__(
+            code="ROOM_PASSWORD_INVALID",
+            message="Mật khẩu phòng không đúng.",
+        )
+
+
+class JoinCodeGenerationError(DomainError):
+    def __init__(self) -> None:
+        super().__init__(
+            code="JOIN_CODE_GENERATION_FAILED",
+            message="Không thể tạo join code cho phòng. Vui lòng thử lại.",
+        )

@@ -15,9 +15,19 @@ class WishType(str, enum.Enum):
 
 class WishStatus(str, enum.Enum):
     PENDING = "pending"
+    REQUESTED = "requested"
+    REJECTED = "rejected"
     CONFIRMED = "confirmed"
+    DELETED = "deleted"
 
 
 class RoomStatus(str, enum.Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
+
+
+class NotificationEventType(str, enum.Enum):
+    WISH_CREATED = "wish_created"
+    WISH_UPDATED = "wish_updated"
+    WISH_CONFIRM_REQUESTED = "wish_confirm_requested"
+    WISH_CONFIRMED = "wish_confirmed"

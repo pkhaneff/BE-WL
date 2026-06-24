@@ -1,4 +1,6 @@
 from functools import lru_cache
+
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,6 +45,30 @@ class Settings(BaseSettings):
     @property
     def REDIS_URL(self) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    # ===== S3 =====
+    S3_ACCESS_KEY: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("S3_ACCESS_KEY", "AWS_ACCESS_KEY"),
+    )
+    S3_SECRET_KEY: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("S3_SECRET_KEY", "AWS_SECRET_KEY"),
+    )
+    S3_REGION: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("S3_REGION", "AWS_REGION"),
+    )
+    S3_BUCKET_NAME: str | None = None
+
+    S3_PUBLIC_BASE_URL: str | None = None
+    S3_USE_PRESIGNED_URLS: bool = False
+    S3_PRESIGNED_EXPIRES_SECONDS: int = 3600
+
+    S3_PREFIX_AVATAR_USER: str = Field(
+        default="uploads/avata-user",
+        validation_alias=AliasChoices("S3_PREFIX_AVATAR_USER"),
+    )
 
 
 @lru_cache

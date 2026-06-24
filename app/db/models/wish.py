@@ -71,6 +71,9 @@ class WishHistory(Base):
     wish_type: Mapped[WishType] = mapped_column(
         SAEnum(WishType, name="wishtype"), nullable=False
     )
+    action: Mapped[WishStatus] = mapped_column(
+        SAEnum(WishStatus, name="wishstatus"), nullable=False
+    )
     confirmed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
